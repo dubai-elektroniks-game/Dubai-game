@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dubai Elektroniks Prize Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: linear-gradient(to right, red, blue);
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .logo {
+      width: 200px;
+      margin: 20px auto;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+    .card {
+      background: white;
+      color: black;
+      padding: 30px;
+      border-radius: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .card:hover {
+      transform: scale(1.05);
+    }
+    #winner {
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .claim-button, .share-button {
+      background-color: gold;
+      color: black;
+      padding: 15px 30px;
+      margin: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .share-button {
+      background-color: limegreen;
+    }
+    .confetti {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Placeholder_logo.png" alt="Dubai Elektroniks" class="logo" id="companyLogo">
+
+  <h1>Scratch and Win Amazing Prizes!</h1>
+
+  <div class="cards" id="cardContainer"></div>
+
+  <div id="winner"></div>
+
+  <button class="claim-button" id="claimButton" style="display:none;" onclick="claimPrize()">Claim Your Prize</button>
+  <button class="share-button" id="shareButton" style="display:none;" onclick="sharePrize()">Share to 5 Friends</button>
+
+  <canvas class="confetti" id="confettiCanvas"></canvas>
+
+  <audio id="winSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio>
+
+  <script>
+    const prizes = [
+      "iPhone 15 Pro Max",
+      "Samsung Galaxy S24 Ultra",
+      "MacBook Pro M3",
+      "Sony 4K Camera",
+      "LG 4K HD TV",
+      "Solar Panel Kit",
+      "Gold Detector",
+      "Gold Smelting Machine",
+      "Gold Weighing Scale"
+    ];
+
+    const cardContainer = document.getElementById('cardContainer');
+    const winnerText = document.getElementById('winner');
+    const winSound = document.getElementById('winSound');
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const ctx = confettiCanvas.getContext('2d');
+    let confetti = [];
+
+    function resizeCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function createConfetti() {
+      confetti = [];
+      for (let i = 0; i < 150; i++) {
+        confetti.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          r: Math.random() * 6 + 4,
+          d: Math.random() * 10 + 5,
+          color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+          tilt: Math.random() * 10 - 10,
+          tiltAngleIncremental: Math.random() * 0.07 + 0.05,
+          tiltAngle: 0
+        });
+      }
+    }
+
+    function drawConfetti() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      confetti.forEach(c => {
+        ctx.beginPath();
+        ctx.lineWidth = c.r / 2;
+        ctx.strokeStyle = c.color;
+        ctx.moveTo(c.x + c.tilt + c.r / 3, c.y);
+        ctx.lineTo(c.x + c.tilt, c.y + c.tilt + c.r / 3);
+        ctx.stroke();
+      });
+      updateConfetti();
+    }
+
+    function updateConfetti() {
+      confetti.forEach(c => {
+        c.tiltAngle += c.tiltAngleIncremental;
+        c.y += (Math.cos(c.d) + 3 + c.r / 2) / 2;
+        c.x += Math.sin(c.d);
+        c.tilt = Math.sin(c.tiltAngle - (i / 3)) * 15;
+
+        if (c.y > window.innerHeight) {
+          c.x = Math.random() * window.innerWidth;
+          c.y = -20;
+        }
+      });
+    }
+
+    function animateConfetti() {
+      drawConfetti();
+      requestAnimationFrame(animateConfetti);
+    }
+
+    function createCards() {
+      for (let i = 0; i < 8; i++) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerText = "Tap to Reveal";
+        card.onclick = () => revealPrize(card);
+        cardContainer.appendChild(card);
+      }
+    }
+
+    function revealPrize(card) {
+      const randomPrize = prizes[Math.floor(Math.random() * prizes.length)];
+      card.innerText = randomPrize;
+      winnerText.innerText = `Congratulations! You won a ${randomPrize}!`;
+      winSound.play();
+      document.getElementById('claimButton').style.display = 'inline-block';
+      document.getElementById('shareButton').style.display = 'inline-block';
+      createConfetti();
+      animateConfetti();
+      Array.from(document.getElementsByClassName('card')).forEach(c => c.onclick = null);
+    }
+
+    function claimPrize() {
+      window.location.href = "https://wa.me/491783752967?text=Hello!%20I%20have%20won%20a%20prize%20from%20Dubai%20Elektroniks!";
+    }
+
+    function sharePrize() {
+      if (navigator.share) {
+        navigator.share({
+          title: 'Win Big at Dubai Elektroniks!',
+          text: 'I just won a prize! You can too! Join now!',
+          url: window.location.href
+        })
+        .then(() => alert('Thanks for sharing!'))
+        .catch((error) => alert('Sharing failed:', error));
+      } else {
+        alert('Sharing not supported in this browser.');
+      }
+    }
+
+    createCards();
+  </script>
+</body>
+</html>
